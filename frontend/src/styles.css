@@ -1,0 +1,151 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Amyrahluxe palette */
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-charcoal: var(--brand-charcoal);
+  --color-brand-blush: var(--brand-blush);
+  --color-brand-sage: var(--brand-sage);
+  --color-brand-rose: var(--brand-rose);
+  --color-brand-cream: var(--brand-cream);
+
+  --shadow-soft-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-soft: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-soft-lg: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-soft-xl: 0 8px 32px rgba(0,0,0,0.10);
+
+  --font-display: "Cormorant Garamond", "Georgia", serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Amyrahluxe tokens */
+  --canvas: #FAF8F5;
+  --ink: #2C2C2C;
+  --paper: #FFFFFF;
+  --brand-gold: #C5A572;
+  --brand-charcoal: #3D3D3A;
+  --brand-blush: #F5E6E0;
+  --brand-sage: #A8B5A0;
+  --brand-rose: #C4918A;
+  --brand-cream: #F0EBE3;
+
+  /* shadcn semantic mapped to palette */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--brand-charcoal);
+  --primary-foreground: var(--paper);
+  --secondary: var(--brand-cream);
+  --secondary-foreground: var(--ink);
+  --muted: var(--brand-cream);
+  --muted-foreground: #8A8A85;
+  --accent: var(--brand-gold);
+  --accent-foreground: var(--paper);
+  --destructive: var(--brand-rose);
+  --destructive-foreground: var(--paper);
+  --border: #E5E0DB;
+  --input: #E5E0DB;
+  --ring: var(--brand-gold);
+
+  --chart-1: var(--brand-gold);
+  --chart-2: var(--brand-rose);
+  --chart-3: var(--brand-sage);
+  --chart-4: var(--brand-charcoal);
+  --chart-5: var(--brand-blush);
+
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--brand-charcoal);
+  --sidebar-primary-foreground: var(--paper);
+  --sidebar-accent: var(--brand-blush);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: #E5E0DB;
+  --sidebar-ring: var(--brand-gold);
+}
+
+.dark {
+  --background: #1A1917;
+  --foreground: #F0EBE3;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .lux-border {
+    border: 1px solid #E5E0DB;
+  }
+  .lux-border-accent {
+    border: 1px solid var(--brand-gold);
+  }
+  .lux-shadow-sm { box-shadow: var(--shadow-soft-sm); }
+  .lux-shadow { box-shadow: var(--shadow-soft); }
+  .lux-shadow-lg { box-shadow: var(--shadow-soft-lg); }
+  .lux-shadow-xl { box-shadow: var(--shadow-soft-xl); }
+
+  .lux-press {
+    transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease;
+  }
+  .lux-press:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  .lux-press:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
