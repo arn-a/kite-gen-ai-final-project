@@ -36,6 +36,7 @@ cloudinary.config(
     api_key=os.getenv("CLOUDINARY_API_KEY"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
+print(f"[CLOUDINARY] Using cloud={os.getenv('CLOUDINARY_CLOUD_NAME')} key={os.getenv('CLOUDINARY_API_KEY')}")
 
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("generated", exist_ok=True)
@@ -137,9 +138,11 @@ def do_publish(post_id: str) -> bool:
                 result = cloudinary.uploader.upload(img_path)
                 image_url = result["secure_url"]
                 posts_db[post_id]["cloudinary_url"] = image_url
-            except:
+            except Exception as e:
+                print(f"[PUBLISH] Cloudinary upload failed: {e}")
                 return False
         else:
+            print(f"[PUBLISH] Image file not found: {img_path}")
             return False
 
     try:
@@ -268,7 +271,8 @@ async def generate_content_plan(
             ext = img_path.rsplit(".", 1)[-1].lower()
             mime = "image/jpeg" if ext in ["jpg", "jpeg"] else f"image/{ext}"
 
-            r = gemini_client.models.generate_content(
+            fresh_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            r = fresh_client.models.generate_content(
                 model=GEMINI_IMAGE_MODEL,
                 contents=[
                     {"inline_data": {"mime_type": mime, "data": img_b64}},
