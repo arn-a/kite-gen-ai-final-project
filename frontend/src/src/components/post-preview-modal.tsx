@@ -100,6 +100,20 @@ export function PostPreviewModal({
     onClose();
   };
 
+  const handleDelete = async () => {
+    if (!confirm("Delete this post permanently?")) return;
+    try {
+      await fetch(`${API_BASE}/api/posts/${post.id}`, { method: "DELETE" });
+      // Remove from local store
+      const currentPosts = postsStore.getSnapshot().posts.filter((p) => p.id !== post.id);
+      postsStore.setPostsDirectly(currentPosts);
+      onClose();
+    } catch {
+      alert("Delete failed");
+    }
+  };
+
+  
   const handleSaveDate = async () => {
     if (!scheduledDate || !scheduledTime) return;
     setSavingDate(true);
@@ -133,10 +147,10 @@ export function PostPreviewModal({
           <div className="flex flex-col md:flex-row">
 
             {/* Image side */}
-            <div className="md:w-1/2 bg-canvas">
-              <img src={post.image} alt="" className="w-full aspect-square object-cover" />
+            <div className="md:w-1/2 bg-canvas flex items-center justify-center p-4">
+              <img src={post.image} alt="" className="max-w-full max-h-[500px] object-contain" />
             </div>
-
+          
             {/* Info side */}
             <div className="md:w-1/2 p-5 flex flex-col gap-4">
 
@@ -254,7 +268,7 @@ export function PostPreviewModal({
           </div>
         </div>
 
-        {/* Footer actions */}
+       {/* Footer actions */}
         <div className="border-t border-[#E5E0DB] p-4 bg-paper flex gap-2 shrink-0">
           {post.status === "Draft" && !published && (
             <>
@@ -284,6 +298,13 @@ export function PostPreviewModal({
             <div className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-sage/15 text-brand-charcoal text-sm font-medium">
               <Check className="size-4" strokeWidth={2} /> Live on Instagram
             </div>
+          )}
+
+          {/* Delete button - always available except for published posts */}
+          {!published && post.status !== "Published" && (
+            <button onClick={handleDelete} className="px-4 py-2.5 rounded-xl bg-brand-rose/10 text-brand-rose text-sm font-medium lux-press" title="Delete post">
+              <X className="size-4" strokeWidth={2} />
+            </button>
           )}
         </div>
       </div>

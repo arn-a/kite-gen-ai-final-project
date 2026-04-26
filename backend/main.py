@@ -375,7 +375,7 @@ Return JSON array with objects:
 - "photo_index": 1-based
 - "post_type": "Product Showcase", "Educational", "Catalogue", "Behind the Scenes", or "Styling Tips"
 - "caption": engaging opening + 2-3 sentences + call to action + 5-7 hashtags including #AmyrahLuxe
-- "day_of_month": spread across the month, post on Tuesday/Wednesday/Thursday/Saturday for best Indian audience engagement. Avoid posting on consecutive days.
+- "day_of_month": spread across the month, post on Tuesday/Wednesday/Thursday/Saturday for best Indian audience engagement. Avoid posting on consecutive days. IMPORTANT: If the brief mentions a specific event date (e.g. "flea market on 12th May"), schedule the post 2-5 days BEFORE that date to build anticipation, never on the event day itself.
 - "time": Use these optimal times for Indian Instagram audience: "10:00" for morning engagement, "13:00" for lunch break scrolling, "18:00" for evening peak (BEST for product posts), "20:00" for night browsing (BEST for educational/styling content). Match time to post type.
 - "reasoning": one sentence
 
@@ -546,48 +546,63 @@ async def publish_now(post_id: str):
 @app.post("/api/generate-marketing-post")
 async def generate_marketing_post(brief: str = Form(...)):
     try:
-        anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
         
-        response = anthropic_client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1024,
-            mcp_servers=[
-                {
-                    "type": "url",
-                    "url": "https://mcp.canva.com/mcp",
-                    "name": "canva"
-                }
-            ],
-            messages=[{
-                "role": "user",
-                "content": f"""You are a design assistant for Amyrah Luxe, a luxury Indian fashion brand.
-                
+        response = req.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": anthropic_key,
+                "anthropic-version": "2023-06-01",
+                "anthropic-beta": "mcp-client-2025-04-04",
+                "content-type": "application/json"
+            },
+            json={
+                "model": "claude-sonnet-4-5",
+                "max_tokens": 2048,
+                "mcp_servers": [
+                    {
+                        "type": "url",
+                        "url": "https://mcp.canva.com/mcp",
+                        "name": "canva"
+                    }
+                ],
+                "messages": [{
+                    "role": "user",
+                    "content": f"""You are a design assistant for Amyrah Luxe, a luxury Indian fashion brand.
+                    
 Brand colors: cream (#F0EBE3), gold (#C5A572), blush pink (#F5E6E0), charcoal (#2C2C2C)
 Brand feel: elegant, minimal, luxury Indo-Western fashion
 
-Create an Instagram post design for this brief: {brief}
+Use Canva to create an Instagram post (1080x1080) for this brief: {brief}
 
 Steps:
-1. Generate an Instagram post design using Canva with the brand aesthetic
-2. Export it as PNG (1080x1080)
-3. Return ONLY the exported image URL, nothing else"""
-            }]
+1. Generate the design with Canva using the brand aesthetic
+2. Save it as an editable design from the candidate
+3. Export it as PNG
+4. Return ONLY the export PNG URL on its own line, nothing else."""
+                }]
+            },
+            timeout=120
         )
         
-        # Extract the image URL from Claude's response
+        data = response.json()
+        
+        if "content" not in data:
+            raise HTTPException(status_code=500, detail=f"Anthropic API error: {data}")
+        
+        # Extract image URL from response
         image_url = None
-        for block in response.content:
-            if hasattr(block, 'text'):
-                text = block.text
-                if "https://" in text:
-                    import re
-                    urls = re.findall(r'https://[^\s"\']+\.png[^\s"\']*', text)
-                    if urls:
-                        image_url = urls[0]
-                        break
+        for block in data["content"]:
+            if block.get("type") == "text":
+                text = block.get("text", "")
+                import re
+                urls = re.findall(r'https://[^\s"\']+\.(?:png|jpg|jpeg)[^\s"\']*', text)
+                if urls:
+                    image_url = urls[-1]
+                    break
         
         if not image_url:
-            raise HTTPException(status_code=500, detail="Canva did not return an image URL")
+            raise HTTPException(status_code=500, detail=f"No image URL in response: {data}")
         
         # Upload to Cloudinary
         cloud_result = cloudinary.uploader.upload(image_url)
@@ -596,9 +611,10 @@ Steps:
         # Generate caption
         caption_response = openai_client.chat.completions.create(
             model=GPT_MODEL,
-            messages=[{"role": "user", "content": f"""Write an Instagram caption for this post brief: {brief}
+            messages=[{"role": "user", "content": f"""Write an Instagram caption for this marketing post brief: {brief}
             
-Brand: Amyrah Luxe - luxury Indian fashion brand.
+{BRAND_INFO}
+
 Tone: elegant, aspirational, sophisticated.
 Include 5-7 relevant hashtags including #AmyrahLuxe.
 Return ONLY the caption."""}],
@@ -609,7 +625,8 @@ Return ONLY the caption."""}],
         # Create post
         post_id = str(uuid.uuid4())[:8]
         now = datetime.now()
-        scheduled_for = f"{now.strftime('%Y-%m')}-{(now.day + 2):02d}T18:00:00"
+        next_day = (now.day + 2) if now.day < 25 else 28
+        scheduled_for = f"{now.strftime('%Y-%m')}-{next_day:02d}T18:00:00"
         
         post = {
             "id": post_id,
@@ -622,7 +639,7 @@ Return ONLY the caption."""}],
             "status": "draft",
             "created_at": now.isoformat(),
             "scheduled_for": scheduled_for,
-            "reasoning": "Marketing creative generated via Canva AI",
+            "reasoning": "Marketing creative generated via Canva",
             "color": "gold"
         }
         posts_db[post_id] = post
@@ -631,6 +648,8 @@ Return ONLY the caption."""}],
         
         return {"message": "Marketing post created!", "post": post}
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Marketing post error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
