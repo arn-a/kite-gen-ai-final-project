@@ -46,7 +46,11 @@ function SchedulePage() {
   const postsByDay = useMemo(() => {
     const map = new Map<string, Post[]>();
     for (const p of posts) {
-      const key = format(new Date(p.scheduledFor), "yyyy-MM-dd");
+      // Use published date for published posts, scheduled date for others
+      const dateToUse = p.status === "Published" && (p as any).publishedAt 
+        ? (p as any).publishedAt 
+        : p.scheduledFor;
+      const key = format(new Date(dateToUse), "yyyy-MM-dd");
       const arr = map.get(key) ?? [];
       arr.push(p);
       map.set(key, arr);

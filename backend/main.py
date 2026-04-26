@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import List
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
+import anthropic
 
 load_dotenv()
 
@@ -174,6 +175,7 @@ def do_publish(post_id: str) -> bool:
         if "id" in publish_data:
             posts_db[post_id]["status"] = "published"
             posts_db[post_id]["instagram_id"] = publish_data["id"]
+            posts_db[post_id]["published_at"] = datetime.now().isoformat()
             schedule_db[post_id]["status"] = "published"
             return True
         else:
@@ -328,6 +330,25 @@ async def generate_content_plan(
     if not image_data:
         return {"message": "No valid products.", "posts": []}
 
+# Fetch analytics to inform scheduling decisions
+    analytics_data = ""
+    try:
+        analytics = get_analytics()
+        if analytics.get("total_posts", 0) > 0:
+            analytics_data = f"""
+HISTORICAL ENGAGEMENT DATA from {analytics['total_posts']} previous posts:
+- Best performing day: {analytics.get('best_day', 'N/A')}
+- Best performing hour: {analytics.get('best_time', 'N/A')}:00
+- Best performing post type: {analytics.get('best_post_type', 'N/A')}
+- Engagement by post type: {analytics.get('by_post_type', {})}
+- Engagement by hour: {analytics.get('by_hour', {})}
+- Engagement by day: {analytics.get('by_day', {})}
+
+USE THIS REAL DATA to optimize scheduling decisions. Prioritize the best performing day, hour, and post type.
+"""
+    except Exception as e:
+        print(f"Analytics fetch error: {e}")
+
     # STEP 3: Generate captions
     print(f"[3/3] Generating {num_posts} captions...")
     products_context = "\n".join([
@@ -345,6 +366,8 @@ Products:
 {products_context}
 
 Brief: {brief if brief else "Balanced mix of content types"}
+
+{analytics_data}
 
 Create exactly {num_posts} Instagram posts for {month}.
 
@@ -514,6 +537,271 @@ async def publish_now(post_id: str):
         return {"message": "Published to Instagram!", "instagram_id": posts_db[post_id].get("instagram_id", "")}
     else:
         raise HTTPException(status_code=500, detail="Publishing failed. Check logs.")
+
+
+# ══════════════════════════════════════
+# MARKETING POST GENERATION (Canva + Claude)
+# ══════════════════════════════════════
+
+@app.post("/api/generate-marketing-post")
+async def generate_marketing_post(brief: str = Form(...)):
+    try:
+        anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        
+        response = anthropic_client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1024,
+            mcp_servers=[
+                {
+                    "type": "url",
+                    "url": "https://mcp.canva.com/mcp",
+                    "name": "canva"
+                }
+            ],
+            messages=[{
+                "role": "user",
+                "content": f"""You are a design assistant for Amyrah Luxe, a luxury Indian fashion brand.
+                
+Brand colors: cream (#F0EBE3), gold (#C5A572), blush pink (#F5E6E0), charcoal (#2C2C2C)
+Brand feel: elegant, minimal, luxury Indo-Western fashion
+
+Create an Instagram post design for this brief: {brief}
+
+Steps:
+1. Generate an Instagram post design using Canva with the brand aesthetic
+2. Export it as PNG (1080x1080)
+3. Return ONLY the exported image URL, nothing else"""
+            }]
+        )
+        
+        # Extract the image URL from Claude's response
+        image_url = None
+        for block in response.content:
+            if hasattr(block, 'text'):
+                text = block.text
+                if "https://" in text:
+                    import re
+                    urls = re.findall(r'https://[^\s"\']+\.png[^\s"\']*', text)
+                    if urls:
+                        image_url = urls[0]
+                        break
+        
+        if not image_url:
+            raise HTTPException(status_code=500, detail="Canva did not return an image URL")
+        
+        # Upload to Cloudinary
+        cloud_result = cloudinary.uploader.upload(image_url)
+        cloudinary_url = cloud_result["secure_url"]
+        
+        # Generate caption
+        caption_response = openai_client.chat.completions.create(
+            model=GPT_MODEL,
+            messages=[{"role": "user", "content": f"""Write an Instagram caption for this post brief: {brief}
+            
+Brand: Amyrah Luxe - luxury Indian fashion brand.
+Tone: elegant, aspirational, sophisticated.
+Include 5-7 relevant hashtags including #AmyrahLuxe.
+Return ONLY the caption."""}],
+            max_tokens=300
+        )
+        caption = caption_response.choices[0].message.content.strip()
+        
+        # Create post
+        post_id = str(uuid.uuid4())[:8]
+        now = datetime.now()
+        scheduled_for = f"{now.strftime('%Y-%m')}-{(now.day + 2):02d}T18:00:00"
+        
+        post = {
+            "id": post_id,
+            "product_id": None,
+            "post_type": "Marketing Creative",
+            "caption": caption,
+            "image_path": "",
+            "original_image": "",
+            "cloudinary_url": cloudinary_url,
+            "status": "draft",
+            "created_at": now.isoformat(),
+            "scheduled_for": scheduled_for,
+            "reasoning": "Marketing creative generated via Canva AI",
+            "color": "gold"
+        }
+        posts_db[post_id] = post
+        schedule_db[post_id] = {"post_id": post_id, "scheduled_for": scheduled_for, "status": "scheduled"}
+        save_db()
+        
+        return {"message": "Marketing post created!", "post": post}
+        
+    except Exception as e:
+        print(f"Marketing post error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def fetch_post_timestamp(instagram_post_id: str):
+    """Fetch the actual published timestamp from Instagram"""
+    try:
+        r = req.get(
+            f"https://graph.instagram.com/v21.0/{instagram_post_id}",
+            params={
+                "fields": "timestamp",
+                "access_token": INSTAGRAM_ACCESS_TOKEN
+            },
+            timeout=30
+        )
+        data = r.json()
+        return data.get("timestamp")
+    except:
+        return None
+
+def fetch_post_insights(instagram_post_id: str):
+    """Fetch insights from Instagram for a published post"""
+    try:
+        r = req.get(
+            f"https://graph.instagram.com/v21.0/{instagram_post_id}/insights",
+            params={
+                "metric": "likes,comments,saved,reach,views",
+                "access_token": INSTAGRAM_ACCESS_TOKEN
+            },
+            timeout=30
+        )
+        data = r.json()
+        if "data" in data:
+            metrics = {}
+            for item in data["data"]:
+                metrics[item["name"]] = item["values"][0]["value"] if item.get("values") else 0
+            return metrics
+        return None
+    except Exception as e:
+        print(f"Insights error: {e}")
+        return None
+
+
+@app.get("/api/posts/{post_id}/insights")
+def get_post_insights(post_id: str):
+    if post_id not in posts_db:
+        raise HTTPException(status_code=404, detail="Not found")
+    post = posts_db[post_id]
+    if post.get("status") != "published" or not post.get("instagram_id"):
+        return {"insights": None, "message": "Post not yet published"}
+    
+    metrics = fetch_post_insights(post["instagram_id"])
+    if metrics:
+        posts_db[post_id]["insights"] = metrics
+        save_db()
+    return {"insights": metrics}
+
+
+@app.get("/api/analytics")
+def get_analytics():
+    """Returns engagement insights across all published posts"""
+    published = [p for p in posts_db.values() if p.get("status") == "published" and p.get("instagram_id")]
+    
+    # Always refresh insights and timestamps
+    for p in published:
+        metrics = fetch_post_insights(p["instagram_id"])
+        if metrics:
+            posts_db[p["id"]]["insights"] = metrics
+        if not p.get("published_at"):
+            ts = fetch_post_timestamp(p["instagram_id"])
+            if ts:
+                posts_db[p["id"]]["published_at"] = ts
+    save_db()
+    
+    # Aggregate by post type and time
+    by_type = {}
+    by_time = {}
+    by_day = {}
+    
+    for p in published:
+        insights = p.get("insights", {})
+        if not insights:
+            continue
+        
+        engagement = insights.get("likes", 0) + insights.get("comments", 0) * 3 + insights.get("saved", 0) * 2
+        
+        post_type = p.get("post_type", "Unknown")
+        if post_type not in by_type:
+            by_type[post_type] = []
+        by_type[post_type].append(engagement)
+        
+        try:
+            scheduled = datetime.fromisoformat(p["scheduled_for"])
+            hour = scheduled.hour
+            day = scheduled.strftime("%A")
+            
+            if hour not in by_time:
+                by_time[hour] = []
+            by_time[hour].append(engagement)
+            
+            if day not in by_day:
+                by_day[day] = []
+            by_day[day].append(engagement)
+        except:
+            pass
+    
+    # Calculate totals
+    total_likes = sum(p.get("insights", {}).get("likes", 0) for p in published)
+    total_comments = sum(p.get("insights", {}).get("comments", 0) for p in published)
+    total_saves = sum(p.get("insights", {}).get("saved", 0) for p in published)
+    total_reach = sum(p.get("insights", {}).get("reach", 0) for p in published)
+    total_views = sum(p.get("insights", {}).get("views", 0) for p in published)
+    
+    # Top 3 posts by engagement
+    posts_with_score = []
+    for p in published:
+        insights = p.get("insights", {})
+        score = insights.get("likes", 0) + insights.get("comments", 0) * 3 + insights.get("saved", 0) * 2
+        posts_with_score.append({
+            "id": p["id"],
+            "caption": p["caption"][:80] + "..." if len(p["caption"]) > 80 else p["caption"],
+            "image": p.get("cloudinary_url", ""),
+            "post_type": p.get("post_type", "Unknown"),
+            "engagement_score": score,
+            "likes": insights.get("likes", 0),
+            "comments": insights.get("comments", 0),
+            "saved": insights.get("saved", 0),
+            "reach": insights.get("reach", 0),
+        })
+    top_posts = sorted(posts_with_score, key=lambda x: x["engagement_score"], reverse=True)[:3]
+    
+    # Engagement trend by day (last 7 days)
+    from datetime import timedelta
+    now = datetime.now()
+    daily_data = {}
+    # Initialize last 7 days with 0
+    for i in range(7):
+        date = (now - timedelta(days=6-i)).strftime("%Y-%m-%d")
+        daily_data[date] = 0
+    
+    for p in published:
+        try:
+            pub_str = p.get("published_at", p.get("scheduled_for", "")).replace("+0000", "")
+            pub_date = datetime.fromisoformat(pub_str)
+            date_key = pub_date.strftime("%Y-%m-%d")
+            if date_key in daily_data:
+                insights = p.get("insights", {})
+                score = insights.get("likes", 0) + insights.get("comments", 0) * 3 + insights.get("saved", 0) * 2
+                daily_data[date_key] += score
+        except:
+            pass
+    
+    return {
+        "total_posts": len(published),
+        "totals": {
+            "likes": total_likes,
+            "comments": total_comments,
+            "saves": total_saves,
+            "reach": total_reach,
+            "views": total_views,
+        },
+        "top_posts": top_posts,
+        "daily_trend": daily_data,
+        "by_post_type": {k: round(sum(v)/len(v), 1) for k, v in by_type.items() if v},
+        "by_hour": {k: round(sum(v)/len(v), 1) for k, v in by_time.items() if v},
+        "by_day": {k: round(sum(v)/len(v), 1) for k, v in by_day.items() if v},
+        "best_time": max(by_time.keys(), key=lambda h: sum(by_time[h])/len(by_time[h])) if by_time else None,
+        "best_day": max(by_day.keys(), key=lambda d: sum(by_day[d])/len(by_day[d])) if by_day else None,
+        "best_post_type": max(by_type.keys(), key=lambda t: sum(by_type[t])/len(by_type[t])) if by_type else None,
+    }
 
 
 @app.get("/")

@@ -33,6 +33,7 @@ async function loadFromBackend() {
         id: p.id,
         image: p.cloudinary_url || `${API_BASE}/${p.image_path}`,
         caption: p.caption,
+        publishedAt: p.published_at,
         type: p.post_type as Post["type"],
         platform: "Instagram" as const,
         status: p.status === "draft" ? "Draft" : p.status === "approved" ? "Approved" : p.status === "rejected" ? "Rejected" : p.status === "published" ? "Published" : "Draft",

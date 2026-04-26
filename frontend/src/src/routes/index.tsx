@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Sparkles, Plus, RotateCcw } from "lucide-react";
+import { Sparkles, Plus } from "lucide-react";
 import { usePostsStore, postsStore } from "@/lib/posts-store";
 import { GenerateChat } from "@/components/generate-chat";
 import { PostCard } from "@/components/post-card";
@@ -98,13 +98,6 @@ function ContentPage() {
               >
                 <Plus className="size-4" strokeWidth={1.5} />
                 Add posts
-              </button>
-              <button
-                onClick={() => postsStore.reset()}
-                className="bg-brand-charcoal text-paper lux-press font-medium text-sm px-4 py-2 rounded-xl flex items-center gap-2"
-              >
-                <RotateCcw className="size-3.5" strokeWidth={1.5} />
-                Start over
               </button>
             </div>
           </div>

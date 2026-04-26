@@ -1,6 +1,5 @@
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
-import { Calendar, LayoutGrid } from "lucide-react";
-
+import { Calendar, LayoutGrid, TrendingUp } from "lucide-react";
 export function AppShell() {
   const location = useLocation();
   const path = location.pathname;
@@ -8,6 +7,7 @@ export function AppShell() {
   const navItems = [
     { to: "/", label: "Content", icon: LayoutGrid, active: path === "/" },
     { to: "/schedule", label: "Schedule", icon: Calendar, active: path === "/schedule" },
+    { to: "/analytics", label: "Analytics", icon: TrendingUp, active: path === "/analytics" },
   ];
 
   return (
