@@ -1,0 +1,107 @@
+{
+  "evaluation_date": "2026-04-26T23:03:36.289960",
+  "model_tested": "gpt-4o-mini",
+  "judge_model": "gpt-4o-mini",
+  "test_size": 5,
+  "with_rag_scores": {
+    "brand_voice": 5.0,
+    "engagement": 4.0,
+    "hashtags": 4.0,
+    "specificity": 5.0,
+    "overall": 4.5
+  },
+  "without_rag_scores": {
+    "brand_voice": 2.8,
+    "engagement": 3.8,
+    "hashtags": 3.2,
+    "specificity": 4.0,
+    "overall": 3.45
+  },
+  "improvement_percentages": {
+    "brand_voice": 78.57142857142858,
+    "engagement": 5.263157894736848,
+    "hashtags": 24.999999999999993,
+    "specificity": 25.0,
+    "overall": 30.43478260869564
+  },
+  "latency_seconds": {
+    "with_rag_avg": 2.6806372165679933,
+    "without_rag_avg": 2.156447982788086
+  },
+  "raw_results": {
+    "with_rag": [
+      {
+        "brand_voice": 5,
+        "engagement": 4,
+        "hashtags": 4,
+        "specificity": 5,
+        "reasoning": "The caption beautifully captures the brand's elegant and aspirational voice while providing specific product details, though the call-to-action could be more subtle to enhance engagement."
+      },
+      {
+        "brand_voice": 5,
+        "engagement": 4,
+        "hashtags": 4,
+        "specificity": 5,
+        "reasoning": "The caption beautifully captures the brand's elegant and aspirational voice while providing specific product details, though it could enhance engagement with a more personal touch or question."
+      },
+      {
+        "brand_voice": 5,
+        "engagement": 4,
+        "hashtags": 4,
+        "specificity": 5,
+        "reasoning": "The caption beautifully embodies the brand's elegant and sophisticated voice, includes a strong emotional appeal and call-to-action, uses relevant hashtags, and provides specific details about the product."
+      },
+      {
+        "brand_voice": 5,
+        "engagement": 4,
+        "hashtags": 4,
+        "specificity": 5,
+        "reasoning": "The caption beautifully embodies the brand's elegant and refined voice, effectively highlights product details, and includes relevant hashtags, though the call-to-action could be more subtle."
+      },
+      {
+        "brand_voice": 5,
+        "engagement": 4,
+        "hashtags": 4,
+        "specificity": 5,
+        "reasoning": "The caption beautifully embodies an elegant and aspirational tone, effectively highlights product details, and includes relevant hashtags, though it could benefit from a more direct call-to-action."
+      }
+    ],
+    "without_rag": [
+      {
+        "brand_voice": 3,
+        "engagement": 4,
+        "hashtags": 3,
+        "specificity": 4,
+        "reasoning": "While the caption conveys elegance and highlights the product's details, it leans towards a more generic promotional tone and includes a direct call-to-action that feels less refined."
+      },
+      {
+        "brand_voice": 3,
+        "engagement": 4,
+        "hashtags": 3,
+        "specificity": 4,
+        "reasoning": "While the caption captures some elegance and detail, it leans towards a more casual tone and includes a direct call-to-action that feels slightly salesy, which detracts from the refined brand voice."
+      },
+      {
+        "brand_voice": 2,
+        "engagement": 3,
+        "hashtags": 4,
+        "specificity": 4,
+        "reasoning": "While the caption includes some elegant elements, it leans towards a more generic and sales-driven tone, lacking the refined sophistication expected from a luxury brand."
+      },
+      {
+        "brand_voice": 3,
+        "engagement": 4,
+        "hashtags": 3,
+        "specificity": 4,
+        "reasoning": "While the caption conveys elegance and details about the product, it leans towards a more salesy tone and could benefit from a more refined expression of aspiration."
+      },
+      {
+        "brand_voice": 3,
+        "engagement": 4,
+        "hashtags": 3,
+        "specificity": 4,
+        "reasoning": "While the caption captures some elegance and detail, it leans slightly towards a more generic tone and includes a direct sales call-to-action that detracts from the refined brand voice."
+      }
+    ]
+  }
+}

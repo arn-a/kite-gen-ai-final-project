@@ -1,0 +1,109 @@
+{
+  "evaluation_date": "2026-04-26T23:17:11.391584",
+  "model_evaluated": "gemini-2.5-flash-image (production)",
+  "evaluator": "gpt-4o-mini",
+  "dataset_size": 8,
+  "summary": {
+    "garment_preservation": 4.0,
+    "background_quality": 4.62,
+    "no_text_artifacts": 5.0,
+    "prop_placement": 4.0,
+    "overall": 4.41
+  },
+  "pass_rates_above_4": {
+    "Garment Preservation": 100.0,
+    "Background Quality": 100.0,
+    "No Text Artifacts": 100.0,
+    "Prop Placement": 100.0
+  },
+  "raw_results": [
+    {
+      "post_id": "361e1321",
+      "original": "uploads/889fc0c2_cheesetest.png",
+      "transformed": "generated/889fc0c2_professional.png",
+      "post_type": "Product Showcase",
+      "garment_preservation": 4,
+      "background_quality": 4,
+      "no_text_artifacts": 5,
+      "prop_placement": 4,
+      "reasoning": "The garment is largely preserved with minor details altered, the background is aesthetically pleasing but not magazine-cover quality, there are no text artifacts, and the props enhance the composition without obstructing the garment."
+    },
+    {
+      "post_id": "8242a8ad",
+      "original": "uploads/e90a5c45_TESTIMAGE.jpeg",
+      "transformed": "generated/e90a5c45_professional.png",
+      "post_type": "Styling Tips",
+      "garment_preservation": 4,
+      "background_quality": 4,
+      "no_text_artifacts": 5,
+      "prop_placement": 4,
+      "reasoning": "The garment is mostly preserved with minor detail variations, the background is high quality but not magazine-cover perfect, there are no text artifacts, and the props enhance the composition without obstructing the garment."
+    },
+    {
+      "post_id": "64c93b56",
+      "original": "uploads/731979a4_testimage2.jpeg",
+      "transformed": "generated/731979a4_professional.png",
+      "post_type": "Product Showcase",
+      "garment_preservation": 4,
+      "background_quality": 5,
+      "no_text_artifacts": 5,
+      "prop_placement": 4,
+      "reasoning": "The garment is mostly preserved with minor details altered, the background is premium quality, there are no text artifacts, and props slightly compete with the garment."
+    },
+    {
+      "post_id": "db12667b",
+      "original": "uploads/f480dde1_WhatsApp Image 2026-04-22 at 3.46.04 PM.jpeg",
+      "transformed": "generated/f480dde1_professional.png",
+      "post_type": "Product Showcase",
+      "garment_preservation": 4,
+      "background_quality": 4,
+      "no_text_artifacts": 5,
+      "prop_placement": 4,
+      "reasoning": "The garment is largely preserved with minor variations in detail, the background is aesthetically pleasing but not magazine-cover quality, there are no text artifacts, and the props enhance the composition without obstructing the garment."
+    },
+    {
+      "post_id": "eca9aac1",
+      "original": "uploads/0b07b82b_WhatsApp Image 2026-04-22 at 3.46.04 PM.jpeg",
+      "transformed": "generated/0b07b82b_professional.png",
+      "post_type": "Product Showcase",
+      "garment_preservation": 4,
+      "background_quality": 5,
+      "no_text_artifacts": 5,
+      "prop_placement": 4,
+      "reasoning": "The garment is nearly identical with minor variations, the background is premium quality, there are no text artifacts, and while the props enhance the composition, they slightly compete with the garment."
+    },
+    {
+      "post_id": "3ebebf91",
+      "original": "uploads/1e79ccd8_testimage2.jpeg",
+      "transformed": "generated/1e79ccd8_professional.png",
+      "post_type": "Product Showcase",
+      "garment_preservation": 4,
+      "background_quality": 5,
+      "no_text_artifacts": 5,
+      "prop_placement": 4,
+      "reasoning": "The garment is mostly preserved with minor details altered, the background is premium quality, there are no text artifacts, and while props enhance the composition, they slightly compete for attention."
+    },
+    {
+      "post_id": "8e94e497",
+      "original": "uploads/5f299e4f_TESTIMAGE.jpeg",
+      "transformed": "generated/5f299e4f_professional.png",
+      "post_type": "Product Showcase",
+      "garment_preservation": 4,
+      "background_quality": 5,
+      "no_text_artifacts": 5,
+      "prop_placement": 4,
+      "reasoning": "The garment is mostly preserved with minor details altered, the background is high-quality and suitable for luxury branding, there are no text artifacts, and while props enhance the composition, they slightly compete with the garment."
+    },
+    {
+      "post_id": "baeab0cc",
+      "original": "uploads/a09ad90c_demovideoimage.png",
+      "transformed": "generated/a09ad90c_professional.png",
+      "post_type": "Product Showcase",
+      "garment_preservation": 4,
+      "background_quality": 5,
+      "no_text_artifacts": 5,
+      "prop_placement": 4,
+      "reasoning": "The garment is largely preserved with minor details altered, the background is premium quality, there are no text artifacts, and while props enhance the composition, they slightly compete with the garment."
+    }
+  ]
+}
